@@ -29,8 +29,11 @@ __all__ = [
     'Generic',
     'Optional',
     'Tuple',
+    'Matrix',
+    'Tensor',
     'Type',
     'TypeVar',
+    'TypeNumVar',
     'Union',
 
     # ABCs (from collections.abc).
@@ -1205,7 +1208,7 @@ class GenericMeta(TypingMeta, abc.ABCMeta):
                     "Parameters to Generic[...] must all be unique")
             tvars = params
             args = params
-        elif self in (Tuple, Callable):
+        elif self in (Tuple, Callable, Matrix, Tensor):
             tvars = _type_vars(params)
             args = params
         elif self is _Protocol:
@@ -1377,6 +1380,24 @@ class Tuple(tuple, extra=tuple, metaclass=TupleMeta):
         return _generic_new(tuple, cls, *args, **kwds)
 
 class Matrix(tuple, extra=tuple, metaclass=TupleMeta):
+    """Tuple type; Tuple[X, Y] is the cross-product type of X and Y.
+
+    Example: Tuple[T1, T2] is a tuple of two elements corresponding
+    to type variables T1 and T2.  Tuple[int, float, str] is a tuple
+    of an int, a float and a string.
+
+    To specify a variable-length tuple of homogeneous type, use Tuple[T, ...].
+    """
+
+    __slots__ = ()
+
+    def __new__(cls, *args, **kwds):
+        if cls._gorg is Matrix:
+            raise TypeError("Type Tuple cannot be instantiated; "
+                            "use tuple() instead")
+        return _generic_new(tuple, cls, *args, **kwds)
+
+class Tensor(tuple, extra=tuple, metaclass=TupleMeta):
     """Tuple type; Tuple[X, Y] is the cross-product type of X and Y.
 
     Example: Tuple[T1, T2] is a tuple of two elements corresponding
