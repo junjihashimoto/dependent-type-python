@@ -1,3 +1,2 @@
 all:
-	python3.6 test.py
-
+	python3.6 ndarray-proto.py

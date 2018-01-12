@@ -29,11 +29,10 @@ __all__ = [
     'Generic',
     'Optional',
     'Tuple',
-    'Matrix',
-    'Tensor',
+    'Shape',
     'Type',
     'TypeVar',
-    'TypeNumVar',
+    'IntVar',
     'Union',
 
     # ABCs (from collections.abc).
@@ -538,7 +537,7 @@ class TypeVar(_TypingBase, _root=True):
         raise TypeError("Type variables cannot be used with issubclass().")
 
 
-class TypeNumVar(_TypingBase, _root=True):
+class IntVar(_TypingBase, _root=True):
     """Type variable.
 
     Usage::
@@ -622,9 +621,9 @@ class TypeNumVar(_TypingBase, _root=True):
     def __subclasscheck__(self, cls):
         raise TypeError("Type variables cannot be used with issubclass().")
     def __add__(self, b):
-        return TypeNumVar(self.__name__+" + " +b.__name__)
+        return IntVar(self.__name__+" + " +b.__name__)
     def __mul__(self, b):
-        return TypeNumVar(self.__name__+" * " +b.__name__)
+        return IntVar(self.__name__+" * " +b.__name__)
 
 
     
@@ -1021,7 +1020,7 @@ class GenericMeta(TypingMeta, abc.ABCMeta):
         if tvars is not None:
             # Called from __getitem__() below.
             assert origin is not None
-            # assert all(isinstance(t, TypeVar)  or isinstance(t, TypeNumVar) for t in tvars), tvars
+            # assert all(isinstance(t, TypeVar)  or isinstance(t, IntVar) for t in tvars), tvars
         else:
             # Called from class statement.
             assert tvars is None, tvars
@@ -1208,7 +1207,7 @@ class GenericMeta(TypingMeta, abc.ABCMeta):
                     "Parameters to Generic[...] must all be unique")
             tvars = params
             args = params
-        elif self in (Tuple, Callable, Matrix, Tensor):
+        elif self in (Tuple, Callable, Shape):
             tvars = _type_vars(params)
             args = params
         elif self is _Protocol:
@@ -1379,7 +1378,8 @@ class Tuple(tuple, extra=tuple, metaclass=TupleMeta):
                             "use tuple() instead")
         return _generic_new(tuple, cls, *args, **kwds)
 
-class Matrix(tuple, extra=tuple, metaclass=TupleMeta):
+
+class Shape(tuple, extra=tuple, metaclass=TupleMeta):
     """Tuple type; Tuple[X, Y] is the cross-product type of X and Y.
 
     Example: Tuple[T1, T2] is a tuple of two elements corresponding
@@ -1396,25 +1396,6 @@ class Matrix(tuple, extra=tuple, metaclass=TupleMeta):
             raise TypeError("Type Tuple cannot be instantiated; "
                             "use tuple() instead")
         return _generic_new(tuple, cls, *args, **kwds)
-
-class Tensor(tuple, extra=tuple, metaclass=TupleMeta):
-    """Tuple type; Tuple[X, Y] is the cross-product type of X and Y.
-
-    Example: Tuple[T1, T2] is a tuple of two elements corresponding
-    to type variables T1 and T2.  Tuple[int, float, str] is a tuple
-    of an int, a float and a string.
-
-    To specify a variable-length tuple of homogeneous type, use Tuple[T, ...].
-    """
-
-    __slots__ = ()
-
-    def __new__(cls, *args, **kwds):
-        if cls._gorg is Matrix:
-            raise TypeError("Type Tuple cannot be instantiated; "
-                            "use tuple() instead")
-        return _generic_new(tuple, cls, *args, **kwds)
-
 
 class CallableMeta(GenericMeta):
     """Metaclass for Callable (internal)."""
